@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from app.db.models.issue import Issue
 from app.schemas.issue import IssueCreate, IssueUpdate, IssueStatus, IssuePriority
 
+from app.db.models.project import Project
 
 
 class IssueService:
@@ -29,18 +30,23 @@ class IssueService:
         return db.get(Issue, issue_id)
 
     def create(self, db: Session, project_id: UUID, data: IssueCreate):
+        project = db.get(Project, project_id)
+        if not project:
+            return None
+
         issue = Issue(
-            project_id=project_id,
             title=data.title,
             description=data.description,
             status=data.status.value,
             priority=data.priority.value,
-            created_at=datetime.utcnow(),
         )
-        db.add(issue)
+
+        project.issues.append(issue)
+
         db.commit()
         db.refresh(issue)
         return issue
+
 
     def update(self, db: Session, issue_id: UUID, data: IssueUpdate):
         issue = db.get(Issue, issue_id)

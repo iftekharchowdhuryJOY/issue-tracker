@@ -54,3 +54,19 @@ def test_delete_project(client):
 
     get_again = client.get(f"/api/v1/projects/{project_id}")
     assert get_again.status_code == 404
+
+def test_delete_project_cascades_issues(client):
+    project = client.post(
+        "/api/v1/projects",
+        json={"name": "Cascade Test"},
+    ).json()
+
+    issue = client.post(
+        f"/api/v1/issues/projects/{project['id']}",
+        json={"title": "Will be deleted"},
+    ).json()
+
+    client.delete(f"/api/v1/projects/{project['id']}")
+
+    get_issue = client.get(f"/api/v1/issues/{issue['id']}")
+    assert get_issue.status_code == 404
