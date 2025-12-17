@@ -33,7 +33,7 @@ def test_list_issues_by_project(client):
     )
 
     assert response.status_code == 200
-    assert len(response.json()) >= 1
+    assert len(response.json()["items"]) >= 1
 
 def test_filter_issues(client):
     project = client.post(
@@ -54,7 +54,7 @@ def test_filter_issues(client):
     )
 
     assert response.status_code == 200
-    assert response.json()[0]["priority"] == "high"
+    assert response.json()["items"][0]["priority"] == "high"
 
 def test_update_issue_status(client):
     project = client.post(
