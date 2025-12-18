@@ -4,6 +4,7 @@ import { fetchIssues } from "../api/issues";
 import type { Issue } from "../types/issue";
 import { createIssue } from "../api/issues";
 import { updateIssueStatus } from "../api/issues";
+import { deleteIssue } from "../api/issues";
 
 
 
@@ -62,6 +63,12 @@ export default function ProjectDetail() {
         }
     }, [page, projectId, statusFilter, priorityFilter]);
 
+    useEffect(() => {
+        if (issues.length === 0 && page > 1) {
+            setPage((p) => p - 1);
+        }
+    }, [issues, page]);
+
     async function handleCreateIssue(e: React.FormEvent) {
         e.preventDefault();
 
@@ -111,6 +118,26 @@ export default function ProjectDetail() {
             );
         } catch {
             alert("Failed to update issue status");
+        }
+    }
+
+    async function handleDeleteIssue(issueId: string) {
+        const confirmed = window.confirm(
+            "Are you sure you want to delete this issue? This action cannot be undone."
+        );
+
+        if (!confirmed) return;
+
+        try {
+            await deleteIssue(issueId);
+
+            setIssues((prev) =>
+                prev.filter((issue) => issue.id !== issueId)
+            );
+
+            setTotal((t) => t - 1);
+        } catch {
+            alert("Failed to delete issue");
         }
     }
 
@@ -258,6 +285,20 @@ export default function ProjectDetail() {
                                     }}>
                                         {issue.priority}
                                     </span>
+
+                                    <button
+                                        onClick={() => handleDeleteIssue(issue.id)}
+                                        style={{
+                                            color: "red",
+                                            background: "none",
+                                            border: "none",
+                                            cursor: "pointer",
+                                            fontSize: "0.8em",
+                                            padding: "2px 5px"
+                                        }}
+                                    >
+                                        Delete
+                                    </button>
                                 </div>
                             </div>
                             {issue.description && (

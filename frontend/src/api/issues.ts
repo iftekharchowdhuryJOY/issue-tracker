@@ -49,3 +49,9 @@ export async function updateIssueStatus(
         body: JSON.stringify({ status }),
     });
 }
+
+export async function deleteIssue(issueId: string) {
+    return apiFetch(`/issues/${issueId}`, {
+        method: "DELETE",
+    });
+}
