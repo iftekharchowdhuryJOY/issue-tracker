@@ -37,9 +37,10 @@ This project demonstrates how to design, build, and ship a production-ready CRUD
 
 ## Screenshots
 
-> _(Add screenshots here)_
-
----
+<img width="1867" height="887" alt="first" src="https://github.com/user-attachments/assets/f9fc59f9-1ea7-46e8-9fa2-ce33318d5c44" />
+<img width="1841" height="892" alt="second" src="https://github.com/user-attachments/assets/ffaa1a08-503c-4303-bf8a-eb75690642a9" />
+<img width="1237" height="852" alt="Third" src="https://github.com/user-attachments/assets/39416697-8e0c-4b89-bc1a-21d5a3ae61b0" />
+<img width="973" height="557" alt="four" src="https://github.com/user-attachments/assets/434be9fe-f9e4-41ae-a078-5e406f40bf6a" />
 
 ## Getting Started
 
