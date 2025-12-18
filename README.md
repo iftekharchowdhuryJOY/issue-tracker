@@ -52,81 +52,38 @@ source .venv/bin/activate
 pip install -r requirements.txt
 alembic upgrade head
 uvicorn app.main:app --reload
-Backend runs at:
-http://localhost:8000/docs
+```
 
-Frontend
+Backend runs at: `http://localhost:8000/docs`
+
+### Frontend
+
+```bash
 cd frontend
 npm install
 npm run dev
+```
 
-
-Frontend runs at:
-http://localhost:5173
-
-Demo Credentials
-email: demo@example.com
-password: password123
-
-Why this project?
-
-This project was built to demonstrate:
-
-Clean backend architecture
-
-Secure API design
-
-Real-world frontend workflows
-
-Ability to finish and ship a complete system
-
-
-Keep it **simple, honest, readable**.
+Frontend runs at: `http://localhost:5173`
 
 ---
 
-## 3️⃣ Screenshots & demo (proof beats words)
+## Demo Credentials
 
-### Take 4–6 screenshots:
-1. Login screen
-2. Projects list
-3. Create project form
-4. Project detail with issues
-5. Filters + status update
-6. (Optional) Mobile view
+```
+email: demo@example.com
+password: password123
+```
 
-Save them in:
+---
 
+## Why this project?
 
-/screenshots/
+This project was built to demonstrate:
 
+- Clean backend architecture
+- Secure API design
+- Real-world frontend workflows
+- Ability to finish and ship a complete system
 
-Then reference them in README:
-```md
-![Projects](screenshots/projects.png)
-
-
-Optional but powerful:
-
-30–60 sec screen recording (GIF or MP4)
-
-Show: login → create project → create issue → update status
-
-4️⃣ Repo hygiene (quiet professionalism)
-Do these once:
-
-Remove commented code
-
-Run formatter / linter
-
-Ensure .env is git-ignored
-
-Ensure node_modules not committed
-
-Ensure migrations included
-
-Run final checks:
-
-pytest
-
-npm run build
+Keep it **simple, honest, readable**.
