@@ -1,13 +1,10 @@
-from sqlalchemy import String, DateTime
-from sqlalchemy.orm import Mapped, mapped_column
 from datetime import datetime
 from uuid import UUID, uuid4
 
+from sqlalchemy import DateTime, ForeignKey, String
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
 from app.db.base import Base
-
-from sqlalchemy.orm import relationship
-from typing import List
-
 
 
 class Project(Base):
@@ -20,7 +17,12 @@ class Project(Base):
         DateTime, default=datetime.utcnow
     )
 
-    issues: Mapped[List["Issue"]] = relationship(
+    owner_id: Mapped[UUID | None] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=True,
+    )
+    owner = relationship("User")    
+    issues: Mapped[list["Issue"]] = relationship(
         back_populates="project",
         cascade="all, delete-orphan",
         passive_deletes=True,

@@ -1,20 +1,52 @@
 from uuid import UUID
+
+from sqlalchemy import asc, desc, func
 from sqlalchemy.orm import Session
 
 from app.db.models.project import Project
+from app.schemas.pagination import PaginationParams
 from app.schemas.project import ProjectCreate, ProjectUpdate
+from app.schemas.sorting import SortOrder
+
 
 class ProjectService:
-    def list(self, db: Session):
-        return db.query(Project).all()
+    def list(
+        self,
+        db: Session,
+        pagination: PaginationParams,
+        sort_by: str = "created_at",
+        order: SortOrder = SortOrder.desc,
+    ):
+        allowed_sort_fields = {
+            "created_at": Project.created_at,
+            "name": Project.name,
+        }
+
+        sort_column = allowed_sort_fields.get(sort_by, Project.created_at)
+        order_by = asc(sort_column) if order == SortOrder.asc else desc(sort_column)
+
+        base_query = db.query(Project)
+        total = db.query(func.count(Project.id)).scalar() or 0
+
+        items = (
+            base_query
+            .order_by(order_by)
+            .offset(pagination.offset)
+            .limit(pagination.page_size)
+            .all()
+        )
+
+        return items, total 
+
 
     def get(self, db: Session, project_id: UUID):
         return db.get(Project, project_id)
 
-    def create(self, db: Session, data: ProjectCreate):
+    def create(self, db: Session, data: ProjectCreate, owner_id: UUID):
         project = Project(
             name=data.name,
             description=data.description,
+            owner_id=owner_id,
         )
         db.add(project)
         db.commit()

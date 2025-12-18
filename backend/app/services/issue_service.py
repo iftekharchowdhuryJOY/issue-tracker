@@ -1,11 +1,14 @@
+from datetime import UTC, datetime
 from uuid import UUID
-from datetime import datetime
+
+from sqlalchemy import asc, desc, func
 from sqlalchemy.orm import Session
 
 from app.db.models.issue import Issue
-from app.schemas.issue import IssueCreate, IssueUpdate, IssueStatus, IssuePriority
-
 from app.db.models.project import Project
+from app.schemas.issue import IssueCreate, IssuePriority, IssueStatus, IssueUpdate
+from app.schemas.pagination import PaginationParams
+from app.schemas.sorting import SortOrder
 
 
 class IssueService:
@@ -13,9 +16,21 @@ class IssueService:
         self,
         db: Session,
         project_id: UUID,
+        pagination: PaginationParams,
         status: IssueStatus | None = None,
         priority: IssuePriority | None = None,
+        sort_by: str = "created_at",
+        order: SortOrder = SortOrder.desc,
     ):
+        allowed_sort_fields = {
+            "created_at": Issue.created_at,
+            "priority": Issue.priority,
+            "status": Issue.status,
+        }
+
+        sort_column = allowed_sort_fields.get(sort_by, Issue.created_at)
+        order_by = asc(sort_column) if order == SortOrder.asc else desc(sort_column)
+
         query = db.query(Issue).filter(Issue.project_id == project_id)
 
         if status:
@@ -24,7 +39,18 @@ class IssueService:
         if priority:
             query = query.filter(Issue.priority == priority.value)
 
-        return query.all()
+        total = query.with_entities(func.count(Issue.id)).scalar() or 0
+
+        items = (
+            query.order_by(order_by)
+            .offset(pagination.offset)
+            .limit(pagination.page_size)
+            .all()
+        )
+
+        return items, total
+
+
 
     def get(self, db: Session, issue_id: UUID):
         return db.get(Issue, issue_id)
@@ -60,7 +86,7 @@ class IssueService:
                 value = value.value
             setattr(issue, field, value)
 
-        issue.updated_at = datetime.utcnow()
+        issue.updated_at = datetime.now(UTC)
         db.commit()
         db.refresh(issue)
         return issue

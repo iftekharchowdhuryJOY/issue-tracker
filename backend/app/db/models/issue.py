@@ -1,11 +1,10 @@
-from sqlalchemy import String, DateTime, ForeignKey
-from sqlalchemy.orm import Mapped, mapped_column
 from datetime import datetime
 from uuid import UUID, uuid4
 
-from app.db.base import Base
-from sqlalchemy.orm import relationship
+from sqlalchemy import DateTime, ForeignKey, String
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
+from app.db.base import Base
 
 
 class Issue(Base):

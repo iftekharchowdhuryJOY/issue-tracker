@@ -1,6 +1,4 @@
 from fastapi import HTTPException, status
-from app.schemas.error import ErrorResponse
-from app.core.errors import ErrorCodes
 
 
 def not_found(code: str, message: str):
