@@ -10,3 +10,13 @@ export function fetchProjects(
         `/projects?page=${page}&page_size=${pageSize}`
     );
 }
+
+export async function createProject(
+    name: string,
+    description?: string
+) {
+    return apiFetch("/projects", {
+        method: "POST",
+        body: JSON.stringify({ name, description }),
+    });
+}
