@@ -37,7 +37,48 @@ This project demonstrates how to design, build, and ship a production-ready CRUD
 
 ## Screenshots
 
-> _(Add screenshots here)_
+### How to Add Images to This README
+
+There are two main ways to add images to this README file:
+
+#### Method 1: Using Local Images (Recommended)
+
+1. Create an `images` or `screenshots` folder in the project root:
+   ```bash
+   mkdir images
+   ```
+
+2. Add your image files to this folder (e.g., `images/dashboard.png`)
+
+3. Reference the image in the README using relative paths:
+   ```markdown
+   ![Dashboard Screenshot](images/dashboard.png)
+   ```
+
+#### Method 2: Using Remote Images (URLs)
+
+Reference images hosted online directly:
+```markdown
+![Alt Text](https://example.com/path/to/image.png)
+```
+
+#### Example Usage
+
+```markdown
+### Application Dashboard
+![Dashboard View](images/dashboard.png)
+
+### Issue Details Page
+![Issue Details](images/issue-details.png)
+```
+
+#### Best Practices
+
+- Use descriptive file names (e.g., `login-page.png`, `issue-list.png`)
+- Keep images under 500KB for faster loading
+- Use PNG for screenshots with text, JPEG for photos
+- Always include descriptive alt text for accessibility
+- Consider using relative paths for better portability
 
 ---
 
