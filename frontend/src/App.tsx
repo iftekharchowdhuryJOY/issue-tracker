@@ -14,7 +14,11 @@ export default function App() {
           path="/"
           element={
             <ProtectedRoute>
-              <Projects />
+              <div className="min-h-screen bg-gray-50">
+                <div className="max-w-4xl mx-auto p-6">
+                  <Projects />
+                </div>
+              </div>
             </ProtectedRoute>
           }
         />
@@ -23,7 +27,11 @@ export default function App() {
           path="/projects/:projectId"
           element={
             <ProtectedRoute>
-              <ProjectDetail />
+              <div className="min-h-screen bg-gray-50">
+                <div className="max-w-4xl mx-auto p-6">
+                  <ProjectDetail />
+                </div>
+              </div>
             </ProtectedRoute>
           }
         />

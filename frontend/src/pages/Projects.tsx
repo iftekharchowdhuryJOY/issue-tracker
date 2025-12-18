@@ -64,36 +64,45 @@ export default function Projects() {
     const totalPages = Math.ceil(total / pageSize);
 
     return (
-        <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
-            <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <h1>Projects</h1>
-                <button onClick={logout}>Logout</button>
+        <div>
+            <header className="flex justify-between items-center mb-6">
+                <h1 className="text-2xl font-semibold">Projects</h1>
+                <button
+                    onClick={logout}
+                    className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
+                >
+                    Logout
+                </button>
             </header>
 
             {/* Create Project Section */}
-            <section style={{ marginBottom: '40px', padding: '20px', border: '1px solid #ccc', borderRadius: '8px' }}>
-                <h2>Create New Project</h2>
-                <form onSubmit={handleCreateProject}>
-                    <div style={{ marginBottom: '10px' }}>
+            <section className="bg-white p-6 rounded-lg shadow-sm mb-10 border border-gray-100">
+                <h2 className="text-xl font-semibold mb-4">Create New Project</h2>
+                <form onSubmit={handleCreateProject} className="space-y-4">
+                    <div>
                         <input
                             placeholder="Project name"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
                             disabled={creating}
-                            style={{ width: '100%', padding: '8px' }}
+                            className="w-full border rounded px-3 py-2 focus:outline-none focus:ring focus:border-blue-500"
                         />
                     </div>
-                    <div style={{ marginBottom: '10px' }}>
+                    <div>
                         <textarea
                             placeholder="Description (optional)"
                             value={description}
                             onChange={(e) => setDescription(e.target.value)}
                             disabled={creating}
-                            style={{ width: '100%', padding: '8px', minHeight: '60px' }}
+                            className="w-full border rounded px-3 py-2 focus:outline-none focus:ring focus:border-blue-500 min-h-[80px]"
                         />
                     </div>
-                    {createError && <p style={{ color: 'red' }}>{createError}</p>}
-                    <button type="submit" disabled={creating}>
+                    {createError && <p className="text-red-500 text-sm">{createError}</p>}
+                    <button
+                        type="submit"
+                        disabled={creating}
+                        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-blue-400"
+                    >
                         {creating ? "Creating..." : "Create Project"}
                     </button>
                 </form>
@@ -101,43 +110,48 @@ export default function Projects() {
 
             {/* Projects List Section */}
             <section>
-                <h2>Your Projects</h2>
-                {loading && <p>Loading projects...</p>}
-                {error && <p style={{ color: 'red' }}>{error}</p>}
+                <h2 className="text-xl font-semibold mb-4">Your Projects</h2>
+                {loading && <p className="text-gray-500">Loading projects...</p>}
+                {error && <p className="text-red-500">{error}</p>}
 
                 {!loading && projects.length === 0 && (
-                    <p>No projects yet.</p>
+                    <p className="text-gray-500">No projects yet.</p>
                 )}
 
-                <ul style={{ listStyle: 'none', padding: 0 }}>
+                <ul className="space-y-3">
                     {projects.map((project) => (
-                        <li key={project.id} style={{ marginBottom: '15px', padding: '15px', borderBottom: '1px solid #eee' }}>
-                            <Link to={`/projects/${project.id}`} style={{ textDecoration: 'none', color: '#007bff' }}>
-                                <strong style={{ fontSize: '1.2em' }}>{project.name}</strong>
+                        <li key={project.id} className="bg-white p-4 rounded shadow-sm">
+                            <Link
+                                to={`/projects/${project.id}`}
+                                className="text-lg font-medium text-blue-600 hover:underline block"
+                            >
+                                {project.name}
                             </Link>
                             {project.description && (
-                                <p style={{ margin: '5px 0 0', color: '#666' }}>{project.description}</p>
+                                <p className="text-gray-600 mt-1">{project.description}</p>
                             )}
                         </li>
                     ))}
                 </ul>
 
                 {/* Pagination */}
-                <footer style={{ marginTop: '20px', display: 'flex', gap: '10px', alignItems: 'center' }}>
+                <footer className="mt-8 flex items-center gap-4">
                     <button
                         disabled={page === 1}
                         onClick={() => setPage((p) => p - 1)}
+                        className="px-3 py-1 bg-white border rounded shadow-sm hover:bg-gray-50 disabled:opacity-50"
                     >
                         Previous
                     </button>
 
-                    <span>
+                    <span className="text-sm text-gray-600">
                         Page {page} of {totalPages || 1}
                     </span>
 
                     <button
                         disabled={page === totalPages || totalPages === 0}
                         onClick={() => setPage((p) => p + 1)}
+                        className="px-3 py-1 bg-white border rounded shadow-sm hover:bg-gray-50 disabled:opacity-50"
                     >
                         Next
                     </button>

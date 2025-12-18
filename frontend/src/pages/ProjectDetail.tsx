@@ -144,44 +144,44 @@ export default function ProjectDetail() {
     const totalPages = Math.ceil(total / pageSize);
 
     return (
-        <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
-            <header style={{ marginBottom: '20px' }}>
-                <Link to="/" style={{ textDecoration: 'none', color: '#007bff' }}>← Back to Projects</Link>
-                <h1 style={{ marginTop: '10px' }}>Project Issues</h1>
+        <div>
+            <header className="mb-6">
+                <Link to="/" className="text-blue-600 hover:underline text-sm">← Back to Projects</Link>
+                <h1 className="text-2xl font-semibold mt-2">Project Issues</h1>
             </header>
 
             {/* Create Issue Section */}
-            <section style={{ marginBottom: '40px', padding: '20px', border: '1px solid #ccc', borderRadius: '8px' }}>
-                <h3>Create New Issue</h3>
-                <form onSubmit={handleCreateIssue}>
-                    <div style={{ marginBottom: '10px' }}>
+            <section className="bg-white p-6 rounded-lg shadow-sm mb-10 border border-gray-100">
+                <h2 className="text-xl font-semibold mb-4 text-blue-800">Create New Issue</h2>
+                <form onSubmit={handleCreateIssue} className="space-y-4">
+                    <div>
                         <input
                             placeholder="Issue title"
                             value={title}
                             onChange={(e) => setTitle(e.target.value)}
                             disabled={creating}
-                            style={{ width: '100%', padding: '8px' }}
+                            className="w-full border rounded px-3 py-2 focus:outline-none focus:ring focus:border-blue-500"
                         />
                     </div>
 
-                    <div style={{ marginBottom: '10px' }}>
+                    <div>
                         <textarea
                             placeholder="Description (optional)"
                             value={description}
                             onChange={(e) => setDescription(e.target.value)}
                             disabled={creating}
-                            style={{ width: '100%', padding: '8px', minHeight: '60px' }}
+                            className="w-full border rounded px-3 py-2 focus:outline-none focus:ring focus:border-blue-500 min-h-[80px]"
                         />
                     </div>
 
-                    <div style={{ display: 'flex', gap: '20px', marginBottom: '10px' }}>
-                        <div>
-                            <label style={{ marginRight: '10px' }}>Status:</label>
+                    <div className="flex gap-6">
+                        <div className="flex items-center gap-2 text-sm">
+                            <label className="font-medium text-gray-700">Status:</label>
                             <select
                                 value={status}
                                 onChange={(e) => setStatus(e.target.value)}
                                 disabled={creating}
-                                style={{ padding: '5px' }}
+                                className="border rounded px-2 py-1 bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
                             >
                                 <option value="open">Open</option>
                                 <option value="in_progress">In Progress</option>
@@ -189,13 +189,13 @@ export default function ProjectDetail() {
                             </select>
                         </div>
 
-                        <div>
-                            <label style={{ marginRight: '10px' }}>Priority:</label>
+                        <div className="flex items-center gap-2 text-sm">
+                            <label className="font-medium text-gray-700">Priority:</label>
                             <select
                                 value={priority}
                                 onChange={(e) => setPriority(e.target.value)}
                                 disabled={creating}
-                                style={{ padding: '5px' }}
+                                className="border rounded px-2 py-1 bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
                             >
                                 <option value="low">Low</option>
                                 <option value="medium">Medium</option>
@@ -204,23 +204,27 @@ export default function ProjectDetail() {
                         </div>
                     </div>
 
-                    {createError && <p style={{ color: 'red' }}>{createError}</p>}
+                    {createError && <p className="text-red-500 text-sm">{createError}</p>}
 
-                    <button type="submit" disabled={creating}>
+                    <button
+                        type="submit"
+                        disabled={creating}
+                        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-blue-400"
+                    >
                         {creating ? "Creating..." : "Create Issue"}
                     </button>
                 </form>
             </section>
 
             {/* Filters Section */}
-            <section style={{ marginBottom: '20px', display: 'flex', gap: '20px', alignItems: 'center' }}>
-                <h3>Filters:</h3>
-                <div>
-                    <label style={{ marginRight: '10px' }}>Status</label>
+            <section className="bg-gray-100 p-4 rounded-lg mb-6 flex flex-wrap items-center gap-6 border border-gray-200">
+                <h3 className="text-sm font-bold uppercase tracking-wider text-gray-600">Filters:</h3>
+                <div className="flex items-center gap-2 text-sm">
+                    <label className="text-gray-700">Status</label>
                     <select
                         value={statusFilter}
                         onChange={(e) => setStatusFilter(e.target.value as any)}
-                        style={{ padding: '5px' }}
+                        className="border rounded px-2 py-1 bg-white"
                     >
                         <option value="">All</option>
                         <option value="open">Open</option>
@@ -229,12 +233,12 @@ export default function ProjectDetail() {
                     </select>
                 </div>
 
-                <div>
-                    <label style={{ marginRight: '10px' }}>Priority</label>
+                <div className="flex items-center gap-2 text-sm">
+                    <label className="text-gray-700">Priority</label>
                     <select
                         value={priorityFilter}
                         onChange={(e) => setPriorityFilter(e.target.value as any)}
-                        style={{ padding: '5px' }}
+                        className="border rounded px-2 py-1 bg-white"
                     >
                         <option value="">All</option>
                         <option value="low">Low</option>
@@ -246,84 +250,76 @@ export default function ProjectDetail() {
 
             {/* Issues List Section */}
             <section>
-                <h3>Issues List</h3>
-                {loading && <p>Loading issues...</p>}
-                {error && <p style={{ color: 'red' }}>{error}</p>}
+                <h2 className="text-xl font-semibold mb-4">Issues</h2>
+                {loading && <p className="text-gray-500">Loading issues...</p>}
+                {error && <p className="text-red-500">{error}</p>}
 
                 {!loading && issues.length === 0 && (
-                    <p>No issues found matching these filters.</p>
+                    <p className="text-gray-500 italic">No issues found matching these filters.</p>
                 )}
 
-                <ul style={{ listStyle: 'none', padding: 0 }}>
+                <ul className="space-y-4">
                     {issues.map((issue) => (
-                        <li key={issue.id} style={{ marginBottom: '15px', padding: '15px', borderBottom: '1px solid #eee' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                                <strong style={{ fontSize: '1.1em' }}>{issue.title}</strong>
-                                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                                    <label>
-                                        Status:
-                                        <select
-                                            value={issue.status}
-                                            onChange={(e) =>
-                                                handleStatusChange(
-                                                    issue.id,
-                                                    e.target.value as any
-                                                )
-                                            }
-                                        >
-                                            <option value="open">Open</option>
-                                            <option value="in_progress">In Progress</option>
-                                            <option value="done">Done</option>
-                                        </select>
-                                    </label>
-
-                                    <span style={{
-                                        padding: '2px 8px',
-                                        borderRadius: '4px',
-                                        fontSize: '0.8em',
-                                        backgroundColor: issue.priority === 'high' ? '#f8d7da' : '#f1f1f1'
-                                    }}>
-                                        {issue.priority}
-                                    </span>
-
-                                    <button
-                                        onClick={() => handleDeleteIssue(issue.id)}
-                                        style={{
-                                            color: "red",
-                                            background: "none",
-                                            border: "none",
-                                            cursor: "pointer",
-                                            fontSize: "0.8em",
-                                            padding: "2px 5px"
-                                        }}
-                                    >
-                                        Delete
-                                    </button>
-                                </div>
+                        <li key={issue.id} className="bg-white p-4 rounded shadow-sm border border-gray-100 space-y-2">
+                            <div className="flex justify-between items-center">
+                                <strong className="text-lg text-gray-900">{issue.title}</strong>
+                                <button
+                                    onClick={() => handleDeleteIssue(issue.id)}
+                                    className="text-sm text-red-600 hover:underline"
+                                >
+                                    Delete
+                                </button>
                             </div>
+
+                            <div className="flex gap-4 text-sm items-center">
+                                <label className="text-gray-700">
+                                    Status
+                                    <select
+                                        value={issue.status}
+                                        onChange={(e) =>
+                                            handleStatusChange(
+                                                issue.id,
+                                                e.target.value as any
+                                            )
+                                        }
+                                        className="ml-2 border rounded px-2 py-1 bg-white focus:outline-none"
+                                    >
+                                        <option value="open">Open</option>
+                                        <option value="in_progress">In Progress</option>
+                                        <option value="done">Done</option>
+                                    </select>
+                                </label>
+
+                                <span className="text-gray-500">
+                                    Priority: <span className={`font-medium ${issue.priority === 'high' ? 'text-red-600' : 'text-gray-700'}`}>{issue.priority}</span>
+                                </span>
+                            </div>
+
                             {issue.description && (
-                                <p style={{ margin: '10px 0 0', color: '#666' }}>{issue.description}</p>
+                                <p className="text-gray-600 text-sm leading-relaxed">{issue.description}</p>
                             )}
                         </li>
                     ))}
                 </ul>
 
                 {/* Pagination */}
-                <footer style={{ marginTop: '20px', display: 'flex', gap: '10px', alignItems: 'center' }}>
+                <footer className="mt-8 flex items-center gap-4">
                     <button
                         disabled={page === 1}
                         onClick={() => setPage((p) => p - 1)}
+                        className="px-3 py-1 bg-white border rounded shadow-sm hover:bg-gray-50 disabled:opacity-50"
                     >
                         Previous
                     </button>
 
-                    <span>
+                    <span className="text-sm text-gray-600">
                         Page {page} of {totalPages || 1}
                     </span>
 
                     <button
                         disabled={page === totalPages || totalPages === 0}
                         onClick={() => setPage((p) => p + 1)}
+                        className="px-3 py-1 bg-white border rounded shadow-sm hover:bg-gray-50 disabled:opacity-50"
                     >
                         Next
                     </button>
