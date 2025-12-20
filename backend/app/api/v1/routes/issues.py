@@ -77,7 +77,6 @@ def create_issue(
             "Project not found",
         )
     require_owner(project.owner_id, current_user.id)
-    current_user=Depends(get_current_user)
     return issue_service.create(db, project_id, payload)
 
 @router.get("/{issue_id}", response_model=IssueOut)
