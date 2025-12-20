@@ -29,6 +29,7 @@ def list_projects(
     sort_by: str = "created_at",
     order: SortOrder = SortOrder.desc,
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     pagination = PaginationParams(page=page, page_size=page_size)
     items, total = project_service.list(
@@ -36,6 +37,7 @@ def list_projects(
         pagination=pagination,
         sort_by=sort_by,
         order=order,
+        owner_id=current_user.id,
     )
     return {"items": items, "page": page, "page_size": page_size, "total": total}
 

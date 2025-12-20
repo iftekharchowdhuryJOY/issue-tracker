@@ -16,6 +16,7 @@ class ProjectService:
         pagination: PaginationParams,
         sort_by: str = "created_at",
         order: SortOrder = SortOrder.desc,
+        owner_id: UUID | None = None,
     ):
         allowed_sort_fields = {
             "created_at": Project.created_at,
@@ -26,7 +27,13 @@ class ProjectService:
         order_by = asc(sort_column) if order == SortOrder.asc else desc(sort_column)
 
         base_query = db.query(Project)
-        total = db.query(func.count(Project.id)).scalar() or 0
+        if owner_id:
+            base_query = base_query.filter(Project.owner_id == owner_id)
+        
+        total = db.query(func.count(Project.id))
+        if owner_id:
+            total = total.filter(Project.owner_id == owner_id)
+        total = total.scalar() or 0
 
         items = (
             base_query
