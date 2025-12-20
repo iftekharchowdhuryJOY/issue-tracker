@@ -1,4 +1,5 @@
-from sqlalchemy.orm import Session
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.jwt import create_access_token
 from app.core.security import verify_password
@@ -6,8 +7,11 @@ from app.db.models.user import User
 
 
 class AuthService:
-    def authenticate(self, db: Session, email: str, password: str):
-        user = db.query(User).filter(User.email == email).first()
+    async def authenticate(self, db: AsyncSession, email: str, password: str):
+        stmt = select(User).filter(User.email == email)
+        result = await db.execute(stmt)
+        user = result.scalar_one_or_none()
+        
         if not user:
             return None
 

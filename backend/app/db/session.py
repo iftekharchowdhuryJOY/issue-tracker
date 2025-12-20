@@ -1,30 +1,36 @@
-from sqlalchemy import create_engine, event
+from sqlalchemy import event
 from sqlalchemy.engine import Engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 
-DATABASE_URL = "sqlite:///./issue_tracker.db"
+from app.core.config import settings
 
-engine = create_engine(
-    DATABASE_URL,
-    connect_args={"check_same_thread": False},  # SQLite quirk
+# For SQLite, we might need some extra configuration for foreign keys, 
+# but for Postgres (the final goal), it's more standard.
+# We'll support both by checking the protocol.
+
+engine = create_async_engine(
+    settings.database_url,
+    connect_args={"check_same_thread": False} if settings.database_url.startswith("sqlite") else {},
 )
 
-@event.listens_for(Engine, "connect")
-def set_sqlite_pragma(dbapi_connection, connection_record):
-    cursor = dbapi_connection.cursor()
-    cursor.execute("PRAGMA foreign_keys=ON")
-    cursor.close()
+if settings.database_url.startswith("sqlite"):
+    @event.listens_for(Engine, "connect")
+    def set_sqlite_pragma(dbapi_connection, connection_record):
+        cursor = dbapi_connection.cursor()
+        cursor.execute("PRAGMA foreign_keys=ON")
+        cursor.close()
 
-SessionLocal = sessionmaker(
+AsyncSessionLocal = async_sessionmaker(
     autocommit=False,
     autoflush=False,
     bind=engine,
+    class_=AsyncSession,
 )
 
 
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+async def get_db():
+    async with AsyncSessionLocal() as session:
+        try:
+            yield session
+        finally:
+            await session.close()

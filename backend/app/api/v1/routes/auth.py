@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import get_db
 from app.schemas.auth import LoginRequest, TokenResponse
@@ -9,8 +9,8 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 
 
 @router.post("/login", response_model=TokenResponse)
-def login(payload: LoginRequest, db: Session = Depends(get_db)):
-    token = auth_service.authenticate(
+async def login(payload: LoginRequest, db: AsyncSession = Depends(get_db)):
+    token = await auth_service.authenticate(
         db,
         payload.email,
         payload.password,

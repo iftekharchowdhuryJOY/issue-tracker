@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     cors_origins: list[str] = ["http://localhost:5173"]
     secret_key: str = "dev-secret-key"
     access_token_expire_minutes: int = 60 * 24 * 7  # 7 days
+    database_url: str = "sqlite+aiosqlite:///./issue_tracker.db"
 
     # Configuration to load from .env file and ignore extra environment variables
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")

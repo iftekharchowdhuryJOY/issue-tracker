@@ -1,11 +1,7 @@
-from uuid import UUID
-
 from fastapi import APIRouter, Depends, status
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.dependencies import get_current_user, get_project_for_user
-from app.core.errors import ErrorCodes
-from app.core.http_exceptions import not_found
 from app.db.models.project import Project
 from app.db.models.user import User
 from app.db.session import get_db
@@ -23,16 +19,16 @@ router = APIRouter(prefix="/projects", tags=["projects"])
 
 
 @router.get("", response_model=Page[ProjectOut])
-def list_projects(
+async def list_projects(
     page: int = 1,
     page_size: int = 10,
     sort_by: str = "created_at",
     order: SortOrder = SortOrder.desc,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     pagination = PaginationParams(page=page, page_size=page_size)
-    items, total = project_service.list(
+    items, total = await project_service.list(
         db=db,
         pagination=pagination,
         sort_by=sort_by,
@@ -43,12 +39,12 @@ def list_projects(
 
 
 @router.post("", response_model=ProjectOut, status_code=status.HTTP_201_CREATED)
-def create_project(
+async def create_project(
     payload: ProjectCreate,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    return project_service.create(
+    return await project_service.create(
         db=db,
         data=payload,
         owner_id=current_user.id,
@@ -56,22 +52,22 @@ def create_project(
 
 
 @router.get("/{project_id}", response_model=ProjectOut)
-def get_project(project: Project = Depends(get_project_for_user)):
+async def get_project(project: Project = Depends(get_project_for_user)):
     return project
 
 
 @router.patch("/{project_id}", response_model=ProjectOut)
-def update_project(
+async def update_project(
     payload: ProjectUpdate,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     project: Project = Depends(get_project_for_user),
 ):
-    return project_service.update(db, project.id, payload)
+    return await project_service.update(db, project.id, payload)
 
 
 @router.delete("/{project_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_project(
-    db: Session = Depends(get_db),
+async def delete_project(
+    db: AsyncSession = Depends(get_db),
     project: Project = Depends(get_project_for_user),
 ):
-    project_service.delete(db, project.id)
+    await project_service.delete(db, project.id)

@@ -1,8 +1,9 @@
+import asyncio
 import pytest
-from fastapi.testclient import TestClient
-from sqlalchemy import create_engine, event
+from httpx import ASGITransport, AsyncClient
+from sqlalchemy import event, select
 from sqlalchemy.engine import Engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from app.db.base import Base
 from app.db.session import get_db
@@ -10,75 +11,81 @@ from app.main import app
 from app.core.security import hash_password
 from app.db.models.user import User
 
-TEST_DATABASE_URL = "sqlite:///./test_issue_tracker.db"
+# Use a separate test database
+TEST_DATABASE_URL = "sqlite+aiosqlite:///./test_issue_tracker.db"
 
-engine = create_engine(
+engine = create_async_engine(
     TEST_DATABASE_URL,
     connect_args={"check_same_thread": False},
 )
 
-@event.listens_for(Engine, "connect")
-def set_sqlite_pragma(dbapi_connection, connection_record):
-    cursor = dbapi_connection.cursor()
-    cursor.execute("PRAGMA foreign_keys=ON")
-    cursor.close()
-
-TestingSessionLocal = sessionmaker(
+# SQLAlchemy 2.0 Async Session Factory
+TestingSessionLocal = async_sessionmaker(
     autocommit=False,
     autoflush=False,
     bind=engine,
+    class_=AsyncSession,
+    expire_on_commit=False,
 )
 
-Base.metadata.create_all(bind=engine)
+@pytest.fixture(scope="session")
+def event_loop():
+    loop = asyncio.get_event_loop_policy().new_event_loop()
+    yield loop
+    loop.close()
 
-@pytest.fixture()
-def db_session():
-    connection = engine.connect()
-    transaction = connection.begin()
-    
-    # Enable FKs for this connection specifically if needed, though engine event should cover it
-    # connection.execute(text("PRAGMA foreign_keys=ON"))
+@pytest.fixture(scope="session", autouse=True)
+async def setup_database():
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.drop_all)
+        await conn.run_sync(Base.metadata.create_all)
+    yield
+    await engine.dispose()
 
-    session = TestingSessionLocal(bind=connection)
-
-    try:
+@pytest.fixture
+async def db_session():
+    async with TestingSessionLocal() as session:
+        # Start a nested transaction to roll back changes after each test
+        # Note: Nested transactions with SQLite can sometimes be tricky with aiosqlite,
+        # but for simple integration tests this often works or we just clear tables.
+        # Here we'll just yield the session.
         yield session
-    finally:
-        session.close()
-        transaction.rollback()
-        connection.close()
+        await session.rollback()
 
-@pytest.fixture()
-def client(db_session):
-    def override_get_db():
-        try:
-            yield db_session
-        finally:
-            pass
+@pytest.fixture
+async def client(db_session):
+    async def override_get_db():
+        async with TestingSessionLocal() as session:
+            yield session
 
     app.dependency_overrides[get_db] = override_get_db
-
-    with TestClient(app) as test_client:
-        yield test_client
-
+    
+    # Use AsyncClient with ASGITransport for testing FastAPI async routes
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+        yield ac
+    
     app.dependency_overrides.clear()
 
+@pytest.fixture
+async def auth_client(client, db_session):
+    # Create a test user
+    user_stmt = select(User).filter(User.email == "test@example.com")
+    result = await db_session.execute(user_stmt)
+    user = result.scalar_one_or_none()
+    
+    if not user:
+        user = User(
+            email="test@example.com",
+            hashed_password=hash_password("password123")
+        )
+        db_session.add(user)
+        await db_session.commit()
+        await db_session.refresh(user)
 
-@pytest.fixture()
-def auth_client(client, db_session):
-    user = User(
-        email="test@example.com",
-        hashed_password=hash_password("password123")
-    )
-    db_session.add(user)
-    db_session.commit()
-    db_session.refresh(user)
-
-    response = client.post(
+    response = await client.post(
         "/api/v1/auth/login",
         json={"email": "test@example.com", "password": "password123"}
     )
     token = response.json()["access_token"]
     client.headers.update({"Authorization": f"Bearer {token}"})
     return client
-
