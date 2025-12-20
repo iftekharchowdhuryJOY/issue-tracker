@@ -1,3 +1,5 @@
+from datetime import datetime
+import json
 from uuid import UUID
 
 from sqlalchemy import asc, desc, func, select
@@ -5,8 +7,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.models.project import Project
 from app.schemas.pagination import PaginationParams
-from app.schemas.project import ProjectCreate, ProjectUpdate
+from app.schemas.project import ProjectCreate, ProjectOut, ProjectUpdate
 from app.schemas.sorting import SortOrder
+from app.core.redis import get_cache, set_cache, delete_cache
 
 
 class ProjectService:
@@ -53,7 +56,26 @@ class ProjectService:
 
 
     async def get(self, db: AsyncSession, project_id: UUID):
-        return await db.get(Project, project_id)
+        # Cache-aside pattern
+        cache_key = f"project:{project_id}"
+        cached_data = await get_cache(cache_key)
+        
+        if cached_data:
+            data = json.loads(cached_data)
+            data["id"] = UUID(data["id"])
+            if "created_at" in data:
+                data["created_at"] = datetime.fromisoformat(data["created_at"])
+            if "owner_id" in data:
+                data["owner_id"] = UUID(data["owner_id"])
+            return Project(**data)
+
+        project = await db.get(Project, project_id)
+        if project:
+            # Cache the result
+            project_out = ProjectOut.model_validate(project)
+            await set_cache(cache_key, project_out.model_dump_json())
+            
+        return project
 
     async def create(self, db: AsyncSession, data: ProjectCreate, owner_id: UUID):
         project = Project(
@@ -71,11 +93,16 @@ class ProjectService:
         if not project:
             return None
 
-        for field, value in data.model_dump(exclude_unset=True).items():
+        update_data = data.model_dump(exclude_unset=True)
+        for field, value in update_data.items():
             setattr(project, field, value)
 
         await db.commit()
         await db.refresh(project)
+        
+        # Invalidate cache
+        await delete_cache(f"project:{project_id}")
+        
         return project
 
     async def delete(self, db: AsyncSession, project_id: UUID):
@@ -85,6 +112,10 @@ class ProjectService:
 
         await db.delete(project)
         await db.commit()
+        
+        # Invalidate cache
+        await delete_cache(f"project:{project_id}")
+        
         return project
 
 

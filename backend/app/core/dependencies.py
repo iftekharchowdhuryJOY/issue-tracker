@@ -1,3 +1,5 @@
+import json
+from datetime import datetime
 from uuid import UUID
 
 from fastapi import Depends, HTTPException, status
@@ -8,10 +10,12 @@ from app.core.authorization import require_owner
 from app.core.errors import ErrorCodes
 from app.core.http_exceptions import not_found
 from app.core.jwt import decode_token
+from app.core.redis import get_cache, set_cache
 from app.db.models.issue import Issue
 from app.db.models.project import Project
 from app.db.models.user import User
 from app.db.session import get_db
+from app.schemas.user import UserOut
 from app.services.issue_service import issue_service
 from app.services.project_service import project_service
 
@@ -21,7 +25,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 async def get_current_user(
     token: str = Depends(oauth2_scheme),
     db: AsyncSession = Depends(get_db),
-):
+) -> User:
     try:
         user_id = decode_token(token)
     except Exception:
@@ -30,12 +34,27 @@ async def get_current_user(
             detail="Invalid token",
         )
 
+    # Try to get from cache
+    cache_key = f"user:{user_id}"
+    cached_user = await get_cache(cache_key)
+    if cached_user:
+        user_data = json.loads(cached_user)
+        # Convert strings back to correct types
+        user_data["id"] = UUID(user_data["id"])
+        if "created_at" in user_data:
+            user_data["created_at"] = datetime.fromisoformat(user_data["created_at"])
+        return User(**user_data)
+
     user = await db.get(User, UUID(user_id))
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="User not found",
         )
+
+    # Set cache for 10 minutes
+    user_out = UserOut.model_validate(user)
+    await set_cache(cache_key, user_out.model_dump_json(), expire=600)
 
     return user
 

@@ -17,6 +17,8 @@ class Settings(BaseSettings):
     secret_key: str = "dev-secret-key"
     access_token_expire_minutes: int = 60 * 24 * 7  # 7 days
     database_url: str = "sqlite+aiosqlite:///./issue_tracker.db"
+    redis_url: str = "redis://localhost:6379/0"
+    cache_ttl_seconds: int = 3600  # Default 1 hour
 
     # Configuration to load from .env file and ignore extra environment variables
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")

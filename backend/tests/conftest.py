@@ -1,9 +1,16 @@
-import asyncio
+from unittest.mock import MagicMock, AsyncMock
 import pytest
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy import event, select
 from sqlalchemy.engine import Engine
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+
+import app.core.redis
+
+# Mock Redis for tests to avoid loop issues and external dependencies
+app.core.redis.get_cache = AsyncMock(return_value=None)
+app.core.redis.set_cache = AsyncMock()
+app.core.redis.delete_cache = AsyncMock()
 
 from app.db.base import Base
 from app.db.session import get_db
@@ -28,12 +35,6 @@ TestingSessionLocal = async_sessionmaker(
     expire_on_commit=False,
 )
 
-@pytest.fixture(scope="session")
-def event_loop():
-    loop = asyncio.get_event_loop_policy().new_event_loop()
-    yield loop
-    loop.close()
-
 @pytest.fixture(scope="session", autouse=True)
 async def setup_database():
     async with engine.begin() as conn:
@@ -45,10 +46,6 @@ async def setup_database():
 @pytest.fixture
 async def db_session():
     async with TestingSessionLocal() as session:
-        # Start a nested transaction to roll back changes after each test
-        # Note: Nested transactions with SQLite can sometimes be tricky with aiosqlite,
-        # but for simple integration tests this often works or we just clear tables.
-        # Here we'll just yield the session.
         yield session
         await session.rollback()
 
@@ -60,7 +57,6 @@ async def client(db_session):
 
     app.dependency_overrides[get_db] = override_get_db
     
-    # Use AsyncClient with ASGITransport for testing FastAPI async routes
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
         yield ac
     

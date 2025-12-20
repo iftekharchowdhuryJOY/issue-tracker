@@ -1,3 +1,4 @@
+import json
 from datetime import UTC, datetime
 from uuid import UUID
 
@@ -6,9 +7,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.models.issue import Issue
 from app.db.models.project import Project
-from app.schemas.issue import IssueCreate, IssuePriority, IssueStatus, IssueUpdate
+from app.schemas.issue import IssueCreate, IssuePriority, IssueStatus, IssueUpdate, IssueOut
 from app.schemas.pagination import PaginationParams
 from app.schemas.sorting import SortOrder
+from app.core.redis import get_cache, set_cache, delete_cache
 
 
 class IssueService:
@@ -63,7 +65,27 @@ class IssueService:
 
 
     async def get(self, db: AsyncSession, issue_id: UUID):
-        return await db.get(Issue, issue_id)
+        # Cache-aside pattern
+        cache_key = f"issue:{issue_id}"
+        cached_data = await get_cache(cache_key)
+        
+        if cached_data:
+            data = json.loads(cached_data)
+            data["id"] = UUID(data["id"])
+            data["project_id"] = UUID(data["project_id"])
+            if "created_at" in data:
+                data["created_at"] = datetime.fromisoformat(data["created_at"])
+            if "updated_at" in data and data["updated_at"]:
+                data["updated_at"] = datetime.fromisoformat(data["updated_at"])
+            return Issue(**data)
+
+        issue = await db.get(Issue, issue_id)
+        if issue:
+            # Cache the result
+            issue_out = IssueOut.model_validate(issue)
+            await set_cache(cache_key, issue_out.model_dump_json())
+            
+        return issue
 
     async def create(self, db: AsyncSession, project_id: UUID, data: IssueCreate):
         project = await db.get(Project, project_id)
@@ -99,6 +121,10 @@ class IssueService:
         issue.updated_at = datetime.now(UTC)
         await db.commit()
         await db.refresh(issue)
+        
+        # Invalidate cache
+        await delete_cache(f"issue:{issue_id}")
+        
         return issue
 
     async def delete(self, db: AsyncSession, issue_id: UUID):
@@ -108,6 +134,10 @@ class IssueService:
 
         await db.delete(issue)
         await db.commit()
+        
+        # Invalidate cache
+        await delete_cache(f"issue:{issue_id}")
+        
         return issue
 
 
