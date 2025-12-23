@@ -1,3 +1,4 @@
+import logging
 from fastapi import FastAPI, HTTPException, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
@@ -5,31 +6,67 @@ from fastapi.responses import JSONResponse
 
 from app.api.v1.router import router as v1_router
 from app.core.config import settings
-from app.core.errors import ErrorCodes
+from app.core.errors import AppException, ErrorCodes
 
-app = FastAPI(title=settings.app_name)
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+app = FastAPI(
+    title=settings.app_name,
+    # Hide the default documentation if desired, or keep it.
+    # We will mostly use standard JSON responses.
+)
+
+@app.exception_handler(AppException)
+async def app_exception_handler(request, exc: AppException):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={
+            "error": {
+                "code": exc.code,
+                "message": exc.message,
+                "details": exc.details,
+            }
+        },
+    )
 
 @app.exception_handler(RequestValidationError)
-def validation_exception_handler(request, exc):
+async def validation_exception_handler(request, exc: RequestValidationError):
     return JSONResponse(
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
         content={
-            "code": ErrorCodes.VALIDATION_ERROR,
-            "message": "Validation error",
-            "errors": exc.errors(),
+            "error": {
+                "code": ErrorCodes.VALIDATION_ERROR,
+                "message": "Validation failed",
+                "details": {"errors": exc.errors()},
+            }
         },
     )
 
 @app.exception_handler(HTTPException)
-def http_exception_handler(request, exc):
-    if isinstance(exc.detail, dict) and "error" in exc.detail:
-        return JSONResponse(
-            status_code=exc.status_code,
-            content=exc.detail,
-        )
+async def http_exception_handler(request, exc: HTTPException):
+    # Fallback for standard FastAPI HTTPExceptions (like 405 Method Not Allowed)
     return JSONResponse(
         status_code=exc.status_code,
-        content={"detail": exc.detail},
+        content={
+            "error": {
+                "code": f"HTTP_{exc.status_code}",
+                "message": str(exc.detail),
+            }
+        },
+    )
+
+@app.exception_handler(Exception)
+async def general_exception_handler(request, exc: Exception):
+    logger.exception("Unhandled exception occurred")
+    return JSONResponse(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        content={
+            "error": {
+                "code": ErrorCodes.INTERNAL_ERROR,
+                "message": "An unexpected error occurred",
+            }
+        },
     )
 
 app.add_middleware(

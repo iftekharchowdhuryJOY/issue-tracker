@@ -1,9 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import get_db
 from app.schemas.auth import LoginRequest, TokenResponse
 from app.services.auth_service import auth_service
+from app.core.http_exceptions import unauthorized
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -16,9 +17,6 @@ async def login(payload: LoginRequest, db: AsyncSession = Depends(get_db)):
         payload.password,
     )
     if not token:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid credentials",
-        )
+        unauthorized("Invalid credentials")
 
     return {"access_token": token}

@@ -2,13 +2,13 @@ import json
 from datetime import datetime
 from uuid import UUID
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.authorization import require_owner
 from app.core.errors import ErrorCodes
-from app.core.http_exceptions import not_found
+from app.core.http_exceptions import not_found, unauthorized
 from app.core.jwt import decode_token
 from app.core.redis import get_cache, set_cache
 from app.db.models.issue import Issue
@@ -29,10 +29,7 @@ async def get_current_user(
     try:
         user_id = decode_token(token)
     except Exception:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid token",
-        )
+        unauthorized("Invalid token")
 
     # Try to get from cache
     cache_key = f"user:{user_id}"
@@ -47,10 +44,7 @@ async def get_current_user(
 
     user = await db.get(User, UUID(user_id))
     if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="User not found",
-        )
+        unauthorized("User not found")
 
     # Set cache for 10 minutes
     user_out = UserOut.model_validate(user)
