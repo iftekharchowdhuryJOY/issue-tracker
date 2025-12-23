@@ -2,23 +2,32 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Login from "./pages/Login";
 import Projects from "./pages/Projects";
 import ProjectDetail from "./pages/ProjectDetail";
+import Dashboard from "./pages/Dashboard";
+import Settings from "./pages/Settings";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* Auth routes don't use AppShell */}
         <Route path="/login" element={<Login />} />
 
+        {/* Protected routes */}
         <Route
           path="/"
           element={
             <ProtectedRoute>
-              <div className="min-h-screen bg-gray-50">
-                <div className="max-w-4xl mx-auto p-6">
-                  <Projects />
-                </div>
-              </div>
+              <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/projects"
+          element={
+            <ProtectedRoute>
+              <Projects />
             </ProtectedRoute>
           }
         />
@@ -27,11 +36,16 @@ export default function App() {
           path="/projects/:projectId"
           element={
             <ProtectedRoute>
-              <div className="min-h-screen bg-gray-50">
-                <div className="max-w-4xl mx-auto p-6">
-                  <ProjectDetail />
-                </div>
-              </div>
+              <ProjectDetail />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/settings"
+          element={
+            <ProtectedRoute>
+              <Settings />
             </ProtectedRoute>
           }
         />

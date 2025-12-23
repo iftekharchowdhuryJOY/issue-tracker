@@ -4,7 +4,7 @@ import { useAuth } from "../auth/AuthContext";
 export default function ProtectedRoute({
     children,
 }: {
-    children: JSX.Element;
+    children: React.ReactNode;
 }) {
     const { token } = useAuth();
 

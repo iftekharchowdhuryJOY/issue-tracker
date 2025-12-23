@@ -1,162 +1,88 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
-import { fetchProjects, createProject } from "../api/projects";
+import { Plus, Search, Calendar, Briefcase, ChevronRight } from "lucide-react";
+import { Button } from "../components/ui/Button";
+import { Input } from "../components/ui/Input";
+import { Card, CardHeader, CardTitle, CardContent } from "../components/ui/Card";
+import { Badge } from "../components/ui/Badge";
+import { AppShell } from "../components/AppShell";
+import { MOCK_PROJECTS } from "../mocks/data";
 import type { Project } from "../types/project";
-import { useAuth } from "../auth/AuthContext";
 
 export default function Projects() {
-    const { logout } = useAuth();
+    const [search, setSearch] = useState("");
+    const [projects] = useState<Project[]>(MOCK_PROJECTS);
 
-    // List State
-    const [projects, setProjects] = useState<Project[]>([]);
-    const [page, setPage] = useState(1);
-    const [pageSize] = useState(5);
-    const [total, setTotal] = useState(0);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-
-    // Create Form State
-    const [name, setName] = useState("");
-    const [description, setDescription] = useState("");
-    const [creating, setCreating] = useState(false);
-    const [createError, setCreateError] = useState<string | null>(null);
-
-    useEffect(() => {
-        loadProjects();
-    }, [page]);
-
-    async function loadProjects() {
-        setLoading(true);
-        setError(null);
-        try {
-            const data = await fetchProjects(page, pageSize);
-            setProjects(data.items);
-            setTotal(data.total);
-        } catch (err: any) {
-            setError("Failed to load projects");
-        } finally {
-            setLoading(false);
-        }
-    }
-
-    async function handleCreateProject(e: React.FormEvent) {
-        e.preventDefault();
-        if (!name.trim()) {
-            setCreateError("Project name is required");
-            return;
-        }
-
-        setCreating(true);
-        setCreateError(null);
-        try {
-            await createProject(name, description);
-            setName("");
-            setDescription("");
-            setPage(1); // Reset to first page
-            await loadProjects(); // Refresh list
-        } catch (err: any) {
-            setCreateError("Failed to create project");
-        } finally {
-            setCreating(false);
-        }
-    }
-
-    const totalPages = Math.ceil(total / pageSize);
+    const filteredProjects = projects.filter(p =>
+        p.name.toLowerCase().includes(search.toLowerCase()) ||
+        p.description?.toLowerCase().includes(search.toLowerCase())
+    );
 
     return (
-        <div>
-            <header className="flex justify-between items-center mb-6">
-                <h1 className="text-2xl font-semibold">Projects</h1>
-                <button
-                    onClick={logout}
-                    className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
-                >
-                    Logout
-                </button>
-            </header>
+        <AppShell>
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <h1 className="text-3xl font-bold tracking-tight">Projects</h1>
+                    <p className="text-muted-foreground mt-1">Manage and track your active initiatives.</p>
+                </div>
+                <Button className="shrink-0 shadow-lg shadow-primary/20">
+                    <Plus className="h-4 w-4 mr-2" />
+                    New Project
+                </Button>
+            </div>
 
-            {/* Create Project Section */}
-            <section className="bg-white p-6 rounded-lg shadow-sm mb-10 border border-gray-100">
-                <h2 className="text-xl font-semibold mb-4">Create New Project</h2>
-                <form onSubmit={handleCreateProject} className="space-y-4">
-                    <div>
-                        <input
-                            placeholder="Project name"
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
-                            disabled={creating}
-                            className="w-full border rounded px-3 py-2 focus:outline-none focus:ring focus:border-blue-500"
-                        />
+            <div className="flex items-center gap-4 bg-card p-4 rounded-lg border border-slate-200/60 shadow-sm">
+                <Search className="h-4 w-4 text-muted-foreground ml-1" />
+                <Input
+                    placeholder="Search projects..."
+                    className="border-none bg-transparent shadow-none focus-visible:ring-0 h-auto py-1"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredProjects.map((project) => (
+                    <Link key={project.id} to={`/projects/${project.id}`} className="group">
+                        <Card className="h-full border-slate-200/60 hover:border-primary/50 hover:shadow-md transition-all duration-300">
+                            <CardHeader className="pb-3">
+                                <div className="flex items-start justify-between">
+                                    <div className="p-2 bg-primary/5 rounded-lg group-hover:bg-primary/10 transition-colors">
+                                        <Briefcase className="h-5 w-5 text-primary" />
+                                    </div>
+                                    <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:translate-x-1 transition-transform" />
+                                </div>
+                                <CardTitle className="text-lg mt-4 group-hover:text-primary transition-colors">{project.name}</CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                <p className="text-sm text-muted-foreground line-clamp-2 min-h-[2.5rem]">
+                                    {project.description || "No description provided."}
+                                </p>
+                                <div className="pt-4 flex items-center justify-between border-t text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                                    <div className="flex items-center gap-2">
+                                        <Calendar className="h-3 w-3" />
+                                        {new Date(project.created_at).toLocaleDateString()}
+                                    </div>
+                                    <Badge variant="secondary">Active</Badge>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </Link>
+                ))}
+
+                {filteredProjects.length === 0 && (
+                    <div className="col-span-full py-12 flex flex-col items-center justify-center text-center space-y-4 bg-slate-100/50 rounded-xl border-2 border-dashed border-slate-200">
+                        <div className="h-12 w-12 rounded-full bg-slate-200 flex items-center justify-center">
+                            <Search className="h-6 w-6 text-slate-400" />
+                        </div>
+                        <div className="space-y-1">
+                            <p className="font-semibold text-slate-900">No projects found</p>
+                            <p className="text-sm text-slate-500">Try adjusting your search or create a new project.</p>
+                        </div>
+                        <Button variant="outline" onClick={() => setSearch("")}>Clear Search</Button>
                     </div>
-                    <div>
-                        <textarea
-                            placeholder="Description (optional)"
-                            value={description}
-                            onChange={(e) => setDescription(e.target.value)}
-                            disabled={creating}
-                            className="w-full border rounded px-3 py-2 focus:outline-none focus:ring focus:border-blue-500 min-h-[80px]"
-                        />
-                    </div>
-                    {createError && <p className="text-red-500 text-sm">{createError}</p>}
-                    <button
-                        type="submit"
-                        disabled={creating}
-                        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-blue-400"
-                    >
-                        {creating ? "Creating..." : "Create Project"}
-                    </button>
-                </form>
-            </section>
-
-            {/* Projects List Section */}
-            <section>
-                <h2 className="text-xl font-semibold mb-4">Your Projects</h2>
-                {loading && <p className="text-gray-500">Loading projects...</p>}
-                {error && <p className="text-red-500">{error}</p>}
-
-                {!loading && projects.length === 0 && (
-                    <p className="text-gray-500">No projects yet.</p>
                 )}
-
-                <ul className="space-y-3">
-                    {projects.map((project) => (
-                        <li key={project.id} className="bg-white p-4 rounded shadow-sm">
-                            <Link
-                                to={`/projects/${project.id}`}
-                                className="text-lg font-medium text-blue-600 hover:underline block"
-                            >
-                                {project.name}
-                            </Link>
-                            {project.description && (
-                                <p className="text-gray-600 mt-1">{project.description}</p>
-                            )}
-                        </li>
-                    ))}
-                </ul>
-
-                {/* Pagination */}
-                <footer className="mt-8 flex items-center gap-4">
-                    <button
-                        disabled={page === 1}
-                        onClick={() => setPage((p) => p - 1)}
-                        className="px-3 py-1 bg-white border rounded shadow-sm hover:bg-gray-50 disabled:opacity-50"
-                    >
-                        Previous
-                    </button>
-
-                    <span className="text-sm text-gray-600">
-                        Page {page} of {totalPages || 1}
-                    </span>
-
-                    <button
-                        disabled={page === totalPages || totalPages === 0}
-                        onClick={() => setPage((p) => p + 1)}
-                        className="px-3 py-1 bg-white border rounded shadow-sm hover:bg-gray-50 disabled:opacity-50"
-                    >
-                        Next
-                    </button>
-                </footer>
-            </section>
-        </div>
+            </div>
+        </AppShell>
     );
 }
