@@ -20,3 +20,13 @@ async def login(payload: LoginRequest, db: AsyncSession = Depends(get_db)):
         unauthorized("Invalid credentials")
 
     return {"access_token": token}
+
+
+@router.post("/signup", response_model=TokenResponse)
+async def signup(payload: LoginRequest, db: AsyncSession = Depends(get_db)):
+    token = await auth_service.register(
+        db,
+        payload.email,
+        payload.password,
+    )
+    return {"access_token": token}

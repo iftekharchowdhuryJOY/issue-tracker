@@ -2,6 +2,25 @@ import { apiFetch } from "./client";
 import type { Page } from "../types/page";
 import type { Issue } from "../types/issue";
 
+export function fetchAllIssues(
+    page = 1,
+    pageSize = 10,
+    filters?: {
+        status?: "open" | "in_progress" | "done";
+        priority?: "low" | "medium" | "high";
+    }
+): Promise<Page<Issue>> {
+    const params = new URLSearchParams({
+        page: page.toString(),
+        page_size: pageSize.toString(),
+    });
+
+    if (filters?.status) params.append("status", filters.status);
+    if (filters?.priority) params.append("priority", filters.priority);
+
+    return apiFetch(`/issues?${params.toString()}`);
+}
+
 export function fetchIssues(
     projectId: string,
     page = 1,
@@ -10,7 +29,7 @@ export function fetchIssues(
         status?: "open" | "in_progress" | "done";
         priority?: "low" | "medium" | "high";
     }
-) {
+): Promise<Page<Issue>> {
     const params = new URLSearchParams({
         page: page.toString(),
         page_size: pageSize.toString(),

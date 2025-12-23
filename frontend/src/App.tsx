@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Login from "./pages/Login";
+import Signup from "./pages/Signup";
 import Projects from "./pages/Projects";
 import ProjectDetail from "./pages/ProjectDetail";
 import Dashboard from "./pages/Dashboard";
@@ -12,6 +13,7 @@ export default function App() {
       <Routes>
         {/* Auth routes don't use AppShell */}
         <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
 
         {/* Protected routes */}
         <Route

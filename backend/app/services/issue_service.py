@@ -14,6 +14,63 @@ from app.core.redis import get_cache, set_cache, delete_cache
 
 
 class IssueService:
+    async def list_all(
+        self,
+        db: AsyncSession,
+        user_id: UUID,
+        pagination: PaginationParams,
+        status: IssueStatus | None = None,
+        priority: IssuePriority | None = None,
+        sort_by: str = "created_at",
+        order: SortOrder = SortOrder.desc,
+    ):
+        allowed_sort_fields = {
+            "created_at": Issue.created_at,
+            "priority": Issue.priority,
+            "status": Issue.status,
+        }
+
+        sort_column = allowed_sort_fields.get(sort_by, Issue.created_at)
+        order_by = asc(sort_column) if order == SortOrder.asc else desc(sort_column)
+
+        stmt = (
+            select(Issue)
+            .join(Project, Issue.project_id == Project.id)
+            .filter(Project.owner_id == user_id)
+        )
+
+        if status:
+            stmt = stmt.filter(Issue.status == status.value)
+
+        if priority:
+            stmt = stmt.filter(Issue.priority == priority.value)
+
+        # Count query
+        count_stmt = (
+            select(func.count(Issue.id))
+            .join(Project, Issue.project_id == Project.id)
+            .filter(Project.owner_id == user_id)
+        )
+        if status:
+            count_stmt = count_stmt.filter(Issue.status == status.value)
+        if priority:
+            count_stmt = count_stmt.filter(Issue.priority == priority.value)
+
+        total_result = await db.execute(count_stmt)
+        total = total_result.scalar() or 0
+
+        # Items query
+        stmt = (
+            stmt.order_by(order_by)
+            .offset(pagination.offset)
+            .limit(pagination.page_size)
+        )
+        
+        result = await db.execute(stmt)
+        items = result.scalars().all()
+
+        return items, total
+
     async def list_by_project(
         self,
         db: AsyncSession,

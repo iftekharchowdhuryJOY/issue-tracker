@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { Lock, Mail, Eye, EyeOff, CheckSquare } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
 import { Button } from "../components/ui/Button";
@@ -102,7 +102,7 @@ export default function Login() {
                 </Card>
 
                 <p className="text-center text-sm text-muted-foreground mt-6">
-                    New to IssueTrack? <a href="#" className="text-primary font-semibold hover:underline">Create an account</a>
+                    New to IssueTrack? <Link to="/signup" className="text-primary font-semibold hover:underline">Create an account</Link>
                 </p>
             </div>
         </div>

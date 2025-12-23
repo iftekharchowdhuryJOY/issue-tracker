@@ -17,7 +17,36 @@ from app.schemas.pagination import PaginationParams
 from app.schemas.sorting import SortOrder
 from app.services.issue_service import issue_service
 
+from app.core.dependencies import get_current_user, get_issue_for_user, get_project_for_user
+from app.db.models.user import User
+
 router = APIRouter(prefix="/issues", tags=["issues"])
+
+
+@router.get("/", response_model=Page[IssueOut])
+async def list_all_issues(
+    page: int = 1,
+    page_size: int = 10,
+    sort_by: str = "created_at",
+    order: SortOrder = SortOrder.desc,
+    status: IssueStatus | None = None,
+    priority: IssuePriority | None = None,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    pagination = PaginationParams(page=page, page_size=page_size)
+
+    items, total = await issue_service.list_all(
+        db=db,
+        user_id=user.id,
+        pagination=pagination,
+        status=status,
+        priority=priority,
+        sort_by=sort_by,
+        order=order,
+    )
+
+    return {"items": items, "page": page, "page_size": page_size, "total": total}
 
 
 @router.get("/projects/{project_id}", response_model=Page[IssueOut])
