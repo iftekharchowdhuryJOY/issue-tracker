@@ -6,6 +6,7 @@ import { Input } from "../components/ui/Input";
 import { Card, CardContent } from "../components/ui/Card";
 import { CheckCircle2, AlertCircle } from "lucide-react";
 import { AuthProviders } from "../components/auth/AuthProviders";
+import { AuthLayout } from "../layouts/AuthLayout";
 
 export default function Signup() {
     const navigate = useNavigate();
@@ -66,8 +67,8 @@ export default function Signup() {
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
-            <Card className="w-full max-w-md border border-slate-200/60 shadow-sm bg-white">
+        <AuthLayout>
+            <Card className="w-full border border-slate-200/60 shadow-sm bg-white">
                 <CardContent className="pt-8 pb-8 px-8 space-y-6">
                     <div className="text-center space-y-1.5">
                         <h1 className="text-2xl font-bold tracking-tight text-slate-900">Create your account</h1>
@@ -146,6 +147,6 @@ export default function Signup() {
                     </div>
                 </CardContent>
             </Card>
-        </div>
+        </AuthLayout>
     );
 }
