@@ -63,7 +63,8 @@
   body,
   html,
   #root {
-    @apply h-full min-h-screen overflow-hidden;
+    @apply h-full min-h-screen;
+    /* Removed overflow-hidden to allow page scrolling */
   }
 
   h1,

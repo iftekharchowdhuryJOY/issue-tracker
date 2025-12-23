@@ -1,6 +1,8 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.db.models.user import User
+
 from app.core.jwt import create_access_token
 from app.core.security import verify_password, hash_password
 from app.core.http_exceptions import bad_request
